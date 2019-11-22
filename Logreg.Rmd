@@ -1,0 +1,204 @@
+---
+title: "Logistic Regression"
+author: "Samet Ozturk"
+date: "11/21/2019"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+# DATA
+UIS Drug Treatment study data
+Description
+There are 628 data points in the original data, 575 of which have no missing values.
+
+Variable descriptions:
+
+Variable_____Description___________________________Codes/Values
+
+ID__________Identification Code________________________ 1 - 628
+
+AGE_________Age at Enrollment	Years
+
+BECK________Beck DepressionScore____________________0.000 - 54.000
+
+IV__________History of IV Drug Use________________1 = Never_________2 = Previous_________3 = Recent
+
+NDRUGTXT_____Number of Prior Drug Treatments______________0 - 40
+
+RACE________Subject's Race_________0 = White_________1 = Non-White
+
+TREAT_______Treatment Randomization Assignment______0 = Short____1 = Long
+
+SITE________Treatment Site_______________________0 = A_________1 = B
+
+DFREE_______Remained Drug Free for 12 Months________1 = Yes_________0 = No
+
+Usage
+data(uis)
+Format
+A data frame with dimension 575 by 18.
+
+Source
+Table 1.3 of Hosmer,D.W. and Lemeshow, S. (1998)
+
+References
+Hosmer,D.W. and Lemeshow, S. (1998) Applied Survival Analysis: Regression Modeling of Time to Event Data, John Wiley and Sons Inc., New York, NY
+
+## MODELLING
+We will load data and check the structure.
+```{r}
+df_logreg <- read.table(file = "uis.dat", header = T)
+str(df_logreg)
+```
+#### We will take DFREE as our response variable and define a binomial logistic regression model. We will defince categorical variables with more than 2 levels as factor. Then validate our model, testing our hypothesis with %5 significance level.
+```{r}
+logreg1 <- glm(DFREE~AGE+BECK+as.factor(IVHX)+NDRUGTX+RACE+TREAT+SITE,family = binomial, data = df_logreg)
+summary(logreg1)
+ResidualDeviance = 619.25
+dev_dif <- logreg1$null.deviance - ResidualDeviance
+dev_dif
+```
+Difference between null deviance and residual deviance should be greater than chi-square table value. We will find chi-square table value with 8 degrees of freedom(because of our feature number in our model.) and with 0.05.
+table value: 15.507
+Our model is significant.
+For Chi-Squared Table: <https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRO7PIeI6aFiPDs6Qwj_GH0rKuqkqJzIiCHTUO9EpwZAMqFKWY0>
+
+
+
+
+#### Interpretation of AGE and RACE coefficients:
+We will use exp() function because model summary gives us the coefficients for log(odds) of DFREE.(Remember logit and sigmoid functions.)
+
+```{r}
+exp(logreg1$coefficients)
+```
+When AGE increseas for one unit(or compared to one year younger, on year older person), remaining drug free for 12 months odds increases 1.05 times.
+
+In RACE feature, 1 represent for being white, 0 represent not being black.
+Compared to other races white person's remaining drug free for 12 months odds is 1.25360854 times.
+
+#### Now let's do our hypothesis test for significance(%5 significance level) of features by interpreting p-values.
+
+AGE
+H0: ß1 = 0
+H1: ß1 != 0
+p = 5.59e-05     Rejecting null hypothesis. Feature is statistically significant.
+
+BECK
+H0: ß2 = 0
+H1: ß2 != 0
+p = 0.97961     Can not reject null hypothesis. Feature is not statistically significant.
+
+as.factor(IVHX)2 
+H0: ß3 = 0
+H1: ß3 != 0
+p = 0.03581      Rejecting null hypothesis. Feature is statistically significant.
+
+as.factor(IVHX)3
+H0: ß4 = 0
+H1: ß4 != 0
+p = 0.00401     Rejecting null hypothesis. Feature is statistically significant.
+
+NDRUGTX
+H0: ß5 = 0
+H1: ß5 != 0
+p = 0.01642     Rejecting null hypothesis. Feature is statistically significant.
+
+RACE
+H0: ß6 = 0
+H1: ß6 != 0
+p = 0.31159    Can not reject null hypothesis. Feature is not statistically significant.
+
+TREAT
+H0: ß7 = 0
+H1: ß7 != 0
+p = 0.02640     Rejecting null hypothesis. Feature is statistically significant.
+
+SITE
+H0: ß8 = 0
+H1: ß8 != 0
+p = 0.49375     Can not reject null hypothesis. Feature is not statistically significant.
+
+#### We will compute Confidence Intervals(with %95 confidence) for odds ratio.
+
+```{r}
+exp(confint(logreg1,level = 0.95))
+```
+When AGE increseas for one unit(or compared to one year younger, on year older person), remaining drug free for 12 months odds increases between 1.0165999 and 1.0885461 with %95 confidence level.
+
+When BECK depression score increseas for one unit(or compared to one unit lower person), remaining drug free for 12 months odds increases between 0.9791804 and 1.0216018 with %95 confidence level.
+
+Previous IV drug users' remaining drug free for 12 months odds higher between
+0.3071122 and 0.9511436 compared to others with %95 confidence level.
+
+Recent IV drug users' remaining drug free for 12 months odds higher between
+0.2894769 and 0.7879531 compared to others with %95 confidence level.
+
+When number of prior drug treatments increases by one unit remaining drug free for 12 months odds increase is between 0.8909971 and 0.9854565 times with %95 confidence level.
+
+Compared to other races white person's remaining drug free for 12 months odds is between 0.8050679 and 1.9351600.
+-------
+Long term treatment group's remaining drug free for 12 months odds is higher between 1.0550552 and 2.3068471 times compared to short term treatment group with %95 confidence level.
+
+B settlement treatment group's remaining drug free for 12 months odds is higher between 1.0550552 and 2.3068471 times compared to A settlement treatment group with %95 confidence level.
+
+
+#### We will select our final model with "Stepwise Regression" algorithm.
+```{r}
+step(glm(DFREE~AGE+BECK+factor(IVHX)+NDRUGTX+RACE+TREAT+SITE,data=df_logreg),direction="both")
+```
+
+Our final model is:
+```{r}
+logreg_final <- glm(DFREE~AGE+factor(IVHX)+NDRUGTX+TREAT, data = df_logreg, family = binomial)
+summary(logreg_final)
+```
+
+#### We will find specificity and sensitivity values for our final model. We will use response variable's mean for cut point(or threshold) instead of default 0.5 value.
+```{r}
+cut_point <- mean(df_logreg$DFREE)
+p.pred.dfree<-fitted(logreg_final)  
+p.pred.dfree[p.pred.dfree>cut_point]=1
+p.pred.dfree[p.pred.dfree<=cut_point]=0
+pred_dfree <- as.factor(p.pred.dfree)
+DFREE <- as.factor(df_logreg$DFREE)
+
+sens.dfree<-caret::sensitivity(pred_dfree,DFREE,positive=levels(DFREE)[2])
+spec.dfree<-caret::specificity(pred_dfree,DFREE,negative=levels(DFREE)[1])
+
+paste("sensitivity :",sens.dfree, sep = " ")
+paste("specificity :", spec.dfree, sep = " ")
+
+```
+* TP: True Positive
+* FP: False Positive
+* TN: True Negative
+* FN: False Negative
+
+Sensivitiy = TP/(TP+FN) = %65.3
+On all true remaining drug-free persons(for 12-month period), our model predicted %65.3 correctly. 
+In other words, our model tagged %34.7 truly remained drug-free persons as "not remained drug-free for 12 months".
+
+
+Specificity = TN/(FP+TN) = % 60.9
+On all truly not remained drug free persons(for 12-month period) our model could label those persons correctly with %60.9 accuracy.
+In other words, our model tagged %39.1 of people as remained drug-free while they did not.
+
+
+#### Now let's create a new observation(or define a new person) to do prediction. 
+Note: Normally we do this by splitting our data set via splitting into two as train and test. But for the sake of simplicity and understandability we won't do train-test split and cross validation.
+
+We are creating a person with age of 30, beck depression score 9.01, history of IV drug use is 2, number of previous drug treatment is 1, race is white, short treatment group, settlement A and real remaning drug free value is no.
+```{r}
+newdata <- data.frame("AGE"= 30, "BECK"= 9.01, "IVHX"= 2, "NDRUGTX"= 1, "RACE"=1, "TREAT" = 0, "SITE" = 0, "DFREE" = 0 )
+predict(logreg_final,newdata = newdata)
+
+```
+Remember again, this is the log(odds) ratio. To find real odd ratio, we will use exp(which means e^y) to get rid of log.
+```{r}
+exp(predict(logreg_final,newdata = newdata))
+```
+This person's remaining drug free odds is 0.23 which is consistent with our real value.
+
+
