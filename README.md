@@ -1,9 +1,9 @@
 # Interpretable_Logistic_Regression
-R Markdown reporting file of drug treatment report with Unesco Institute of Statistics data and Logistic Regression
+##R Markdown reporting file of drug treatment report with Unesco Institute of Statistics data and Logistic Regression
 
   Intrepretable Machine Learning algorithms are very important if you are representing your model to non-technical people. You shoul be able to interpret your model and results to an audience without statistics and/or programming background.
 
-  In this project I will walkthrough with codes and show you how to interpret your logistic regression model results. At the end of the project, logistic regression will be and intuitive algorithm rather than a mere black box.
+  In this project I will walkthrough with codes and show you how to interpret your logistic regression model results. At the end of the project, logistic regression will be and intuitive algorithm rather than a mere black box. I am using R Markdown because it makes reporting process whole lot more easier.
 
   We will try to predict if a treated person will remain drug-free for 12 months or not. This is a real world data.
   
